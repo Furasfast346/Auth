@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Тестовое задание: аутентификация (ФИО)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(145deg, #f3f4f6 0%, #e5e7eb 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+        }
+
+        .card {
+            max-width: 500px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(2px);
+            border-radius: 2rem;
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 2rem 1.8rem 2.2rem;
+            transition: all 0.2s ease;
+        }
+
+        h1 {
+            font-size: 1.85rem;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+            background: linear-gradient(135deg, #1e293b, #2d3a4f);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 0.25rem;
+        }
+
+        .sub {
+            color: #5b6e8c;
+            font-size: 0.85rem;
+            margin-bottom: 1.8rem;
+            border-left: 3px solid #8b5cf6;
+            padding-left: 0.7rem;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.2rem;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+            min-width: 100px;
+            margin-bottom: 0;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.3rem;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            font-size: 0.9rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 1rem;
+            background: white;
+            transition: 0.2s;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+        }
+
+        button {
+            background: #1e293b;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.2rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-radius: 2rem;
+            cursor: pointer;
+            transition: 0.2s;
+            width: 100%;
+            margin-top: 0.5rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        button:hover {
+            background: #0f172a;
+            transform: scale(0.98);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+            box-shadow: none;
+            margin-top: 0;
+        }
+
+        .btn-outline:hover {
+            background: #f1f5f9;
+            transform: none;
+        }
+
+        .toggle-buttons {
+            display: flex;
+            gap: 0.8rem;
+            margin-bottom: 1.8rem;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 0.6rem;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            padding: 0.4rem 0;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #94a3b8;
+            cursor: pointer;
+            box-shadow: none;
+            margin: 0;
+            width: auto;
+            border-radius: 0;
+        }
+
+        .toggle-btn.active {
+            color: #1e293b;
+            border-bottom: 2px solid #8b5cf6;
+            border-radius: 0;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .message {
+            margin-top: 1rem;
+            padding: 0.7rem;
+            border-radius: 1rem;
+            font-size: 0.85rem;
+            text-align: center;
+            background: #f8fafc;
+            color: #1e293b;
+        }
+
+        .error-msg {
+            background: #fee2e2;
+            color: #b91c1c;
+            border-left: 3px solid #ef4444;
+        }
+
+        .success-msg {
+            background: #e0f2fe;
+            color: #0c4a6e;
+            border-left: 3px solid #3b82f6;
+        }
+
+        .welcome {
+            text-align: center;
+        }
+
+        .welcome-icon {
+            font-size: 3rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .email-badge {
+            background: #eef2ff;
+            padding: 0.3rem 0.9rem;
+            border-radius: 2rem;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin: 0.8rem 0;
+            word-break: break-all;
+        }
+
+        hr {
+            margin: 1rem 0;
+            border: none;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        footer {
+            font-size: 0.7rem;
+            text-align: center;
+            color: #7e8aa2;
+            margin-top: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+<div class="card" id="app">
+    <h1>🔐 Доступ к системе</h1>
+    <div class="sub">тестовое задание • JWT auth • ФИО</div>
+
+    <!-- Контейнер для неавторизованного состояния (формы) -->
+    <div id="unauth-container">
+        <div class="toggle-buttons">
+            <button class="toggle-btn active" id="btn-login-tab">Вход</button>
+            <button class="toggle-btn" id="btn-register-tab">Регистрация</button>
+        </div>
+
+        <!-- Форма входа -->
+        <div id="login-form">
+            <div class="form-group">
+                <label>📧 Email</label>
+                <input type="email" id="login-email" placeholder="example@domain.com" autocomplete="email">
+            </div>
+            <div class="form-group">
+                <label>🔒 Пароль</label>
+                <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+            </div>
+            <button id="login-btn">Войти →</button>
+        </div>
+
+        <!-- Форма регистрации (с тремя полями) -->
+        <div id="register-form" class="hidden">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>📛 Имя</label>
+                    <input type="text" id="reg-first-name" placeholder="Иван" autocomplete="given-name">
+                </div>
+                <div class="form-group">
+                    <label>🏷️ Фамилия</label>
+                    <input type="text" id="reg-last-name" placeholder="Петров" autocomplete="family-name">
+                </div>
+                <div class="form-group">
+                    <label>👨‍👦 Отчество</label>
+                    <input type="text" id="reg-patronymic" placeholder="Иванович" autocomplete="additional-name">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>📧 Email</label>
+                <input type="email" id="reg-email" placeholder="example@domain.com" autocomplete="email">
+            </div>
+            <div class="form-group">
+                <label>🔒 Пароль</label>
+                <input type="password" id="reg-password" placeholder="минимум 6 символов" autocomplete="new-password">
+            </div>
+            <div class="form-group">
+                <label>🔁 Повторите пароль</label>
+                <input type="password" id="reg-password2" placeholder="повторите пароль" autocomplete="off">
+            </div>
+            <button id="register-btn">Зарегистрироваться →</button>
+        </div>
+    </div>
+
+    <!-- Контейнер для авторизованного состояния -->
+    <div id="auth-container" class="hidden">
+        <div class="welcome">
+            <div class="welcome-icon">✅</div>
+            <h3 style="margin-bottom: 0.2rem;">Добро пожаловать!</h3>
+            <div class="email-badge" id="user-fullname-display">Иванов Иван Иванович</div>
+            <p style="font-size: 0.85rem; color: #475569;" id="user-email-sub">user@example.com</p>
+            <hr>
+            <button id="logout-btn" style="background: #475569;">🚪 Выйти из аккаунта</button>
+        </div>
+    </div>
+
+    <div id="global-message" class="message hidden"></div>
+    <footer>⚡ API: /auth/register | /auth/login | /auth/logout</footer>
+</div>
+
+<script>
+    // ----- НАСТРОЙКИ (измените под свой бэкенд) -----
+    const API_BASE_URL = 'http://localhost:8000';   // <-- замените на ваш адрес API
+    const ENDPOINTS = {
+        register: `${API_BASE_URL}/auth/register`,
+        login:    `${API_BASE_URL}/auth/login`,
+        logout:   `${API_BASE_URL}/auth/logout`,
+    };
+
+    const TOKEN_KEY = 'access_token';
+    const USER_KEY = 'user_data';
+
+    // ----- Вспомогательные функции -----
+    function showMessage(text, isError = false) {
+        const msgDiv = document.getElementById('global-message');
+        msgDiv.textContent = text;
+        msgDiv.className = `message ${isError ? 'error-msg' : 'success-msg'}`;
+        msgDiv.classList.remove('hidden');
+        setTimeout(() => {
+            msgDiv.classList.add('hidden');
+        }, 4000);
+    }
+
+    function setAuthData(token, userInfo = {}) {
+        if (token) localStorage.setItem(TOKEN_KEY, token);
+        if (userInfo && Object.keys(userInfo).length) {
+            localStorage.setItem(USER_KEY, JSON.stringify(userInfo));
+        }
+    }
+
+    function clearAuthData() {
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
+    }
+
+    function getToken() {
+        return localStorage.getItem(TOKEN_KEY);
+    }
+
+    function getUser() {
+        const raw = localStorage.getItem(USER_KEY);
+        if (!raw) return null;
+        try {
+            return JSON.parse(raw);
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // Формируем ФИО для отображения
+    function getFullName(user) {
+        if (!user) return 'пользователь';
+        const parts = [user.last_name, user.first_name, user.patronymic].filter(p => p && p.trim());
+        if (parts.length) return parts.join(' ');
+        if (user.name) return user.name;
+        return user.email || 'пользователь';
+    }
+
+    function updateUIByAuth() {
+        const token = getToken();
+        const user = getUser();
+        const unauthDiv = document.getElementById('unauth-container');
+        const authDiv = document.getElementById('auth-container');
+
+        if (token && user) {
+            unauthDiv.classList.add('hidden');
+            authDiv.classList.remove('hidden');
+            const fullNameSpan = document.getElementById('user-fullname-display');
+            const emailSpan = document.getElementById('user-email-sub');
+            fullNameSpan.textContent = getFullName(user);
+            emailSpan.textContent = user.email || '';
+        } else {
+            unauthDiv.classList.remove('hidden');
+            authDiv.classList.add('hidden');
+            // Сбрасываем формы
+            document.getElementById('login-email').value = '';
+            document.getElementById('login-password').value = '';
+            document.getElementById('reg-first-name').value = '';
+            document.getElementById('reg-last-name').value = '';
+            document.getElementById('reg-patronymic').value = '';
+            document.getElementById('reg-email').value = '';
+            document.getElementById('reg-password').value = '';
+            document.getElementById('reg-password2').value = '';
+        }
+    }
+
+    async function apiRequest(url, method, body = null, needAuth = false) {
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+        if (needAuth) {
+            const token = getToken();
+            if (!token) throw new Error('Нет токена авторизации');
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const options = {
+            method,
+            headers,
+        };
+        if (body) {
+            options.body = JSON.stringify(body);
+        }
+
+        const response = await fetch(url, options);
+        let data = null;
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            data = await response.json();
+        }
+
+        if (!response.ok) {
+            const errorMsg = data?.message || data?.detail || `Ошибка ${response.status}: ${response.statusText}`;
+            throw new Error(errorMsg);
+        }
+        return data;
+    }
+
+    // --- Регистрация с тремя полями ---
+    async function registerUser(first_name, last_name, patronymic, email, password, password2) {
+        if (!first_name.trim()) throw new Error('Укажите имя');
+        if (!last_name.trim()) throw new Error('Укажите фамилию');
+        // Отчество необязательное, но можно проверить на пустоту (разрешим пустую строку)
+        if (!email.trim()) throw new Error('Укажите email');
+        if (password.length < 6) throw new Error('Пароль должен быть минимум 6 символов');
+        if (password !== password2) throw new Error('Пароли не совпадают');
+
+        const body = {
+            first_name: first_name.trim(),
+            last_name: last_name.trim(),
+            patronymic: patronymic ? patronymic.trim() : '',
+            email: email.trim(),
+            password: password,
+            password_confirmation: password2,
+        };
+
+        await apiRequest(ENDPOINTS.register, 'POST', body);
+        showMessage('✅ Регистрация успешна! Теперь войдите.', false);
+        // Переключаем на вкладку логина
+        document.getElementById('btn-login-tab').click();
+        // Очищаем поля паролей
+        document.getElementById('reg-password').value = '';
+        document.getElementById('reg-password2').value = '';
+    }
+
+    // --- Логин (без изменений, но сохраняем больше данных о пользователе, если вернулись) ---
+    async function loginUser(email, password) {
+        if (!email.trim()) throw new Error('Введите email');
+        if (!password) throw new Error('Введите пароль');
+
+        const body = { email: email.trim(), password };
+        const data = await apiRequest(ENDPOINTS.login, 'POST', body);
+
+        let token = null;
+        let userInfo = { email: email.trim() };
+
+        if (data.access_token) token = data.access_token;
+        else if (data.token) token = data.token;
+        else if (data.accessToken) token = data.accessToken;
+        else if (typeof data === 'string') token = data;
+        else if (data && typeof data === 'object') token = data.token || data.access_token;
+
+        if (!token) throw new Error('Сервер не вернул токен. Проверьте формат ответа.');
+
+        // Если сервер вернул пользовательские данные (например, user: { first_name, last_name, patronymic })
+        if (data.user) {
+            userInfo = { ...userInfo, ...data.user };
+        } else if (data.first_name || data.last_name) {
+            userInfo = { ...userInfo, first_name: data.first_name, last_name: data.last_name, patronymic: data.patronymic };
+        }
+
+        setAuthData(token, userInfo);
+        updateUIByAuth();
+        const displayName = getFullName(userInfo);
+        showMessage(`Добро пожаловать, ${displayName}!`, false);
+    }
+
+    async function logoutUser() {
+        const token = getToken();
+        try {
+            if (token) {
+                await apiRequest(ENDPOINTS.logout, 'POST', null, true);
+            }
+        } catch (err) {
+            console.warn('Logout api error:', err);
+        } finally {
+            clearAuthData();
+            updateUIByAuth();
+            showMessage('Вы вышли из системы', false);
+        }
+    }
+
+    function switchForms(showLogin) {
+        const loginDiv = document.getElementById('login-form');
+        const registerDiv = document.getElementById('register-form');
+        const loginTab = document.getElementById('btn-login-tab');
+        const regTab = document.getElementById('btn-register-tab');
+
+        if (showLogin) {
+            loginDiv.classList.remove('hidden');
+            registerDiv.classList.add('hidden');
+            loginTab.classList.add('active');
+            regTab.classList.remove('active');
+        } else {
+            loginDiv.classList.add('hidden');
+            registerDiv.classList.remove('hidden');
+            loginTab.classList.remove('active');
+            regTab.classList.add('active');
+        }
+    }
+
+    function init() {
+        updateUIByAuth();
+
+        document.getElementById('btn-login-tab').addEventListener('click', () => switchForms(true));
+        document.getElementById('btn-register-tab').addEventListener('click', () => switchForms(false));
+
+        document.getElementById('login-btn').addEventListener('click', async () => {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            try {
+                await loginUser(email, password);
+            } catch (err) {
+                showMessage(err.message, true);
+            }
+        });
+
+        document.getElementById('register-btn').addEventListener('click', async () => {
+            const first_name = document.getElementById('reg-first-name').value;
+            const last_name = document.getElementById('reg-last-name').value;
+            const patronymic = document.getElementById('reg-patronymic').value;
+            const email = document.getElementById('reg-email').value;
+            const pwd = document.getElementById('reg-password').value;
+            const pwd2 = document.getElementById('reg-password2').value;
+            try {
+                await registerUser(first_name, last_name, patronymic, email, pwd, pwd2);
+            } catch (err) {
+                showMessage(err.message, true);
+            }
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            await logoutUser();
+        });
+
+        // Enter в формах
+        const loginFields = ['login-email', 'login-password'];
+        loginFields.forEach(id => {
+            document.getElementById(id).addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') document.getElementById('login-btn').click();
+            });
+        });
+        const regFields = ['reg-first-name', 'reg-last-name', 'reg-patronymic', 'reg-email', 'reg-password', 'reg-password2'];
+        regFields.forEach(id => {
+            document.getElementById(id).addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') document.getElementById('register-btn').click();
+            });
+        });
+    }
+
+    init();
+</script>
+</body>
+</html>
