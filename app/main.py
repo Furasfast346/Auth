@@ -26,4 +26,4 @@ app.include_router(auth.router, prefix="/auth", tags=["auth"])
 # app.include_router(mock.router, prefix="/api", tags=["mock"])
 
 if __name__ == "__main__":
-    uvicorn.run('app.main:app')
+    uvicorn.run('app.main:app', reload=True)
