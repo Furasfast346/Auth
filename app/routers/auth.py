@@ -1,4 +1,6 @@
 from fastapi import APIRouter, HTTPException
+from sqlalchemy.orm import selectinload
+
 from app.schemas import UserRegister, UserLogin
 from app.dependencies import SessionDep
 from app.models import User, UserRole
@@ -16,8 +18,11 @@ async def register(data: UserRegister, session: SessionDep):
     if data.password != data.password_confirmation:
         raise HTTPException(status_code=400, detail='Wrong password')
 
-    existing = await session.execute(select(User).where(User.email == data.email))
-    if existing.scalar_one_or_none():
+    result = await session.execute(select(User).where(User.email == data.email))
+    existing_user = result.scalar_one_or_none()
+    if existing_user:
+        if not existing_user.is_active:
+            raise HTTPException(status_code=400, detail='User was deleted')
         raise HTTPException(status_code=400, detail='Email are already registered')
 
     password = pwd_context.hash(data.password)
@@ -36,7 +41,11 @@ async def register(data: UserRegister, session: SessionDep):
 
 @router.post('/login')
 async def login(data: UserLogin, session: SessionDep):
-    result = await session.execute(select(User).where(User.email == data.email))
+    result = await session.execute(
+        select(User)
+        .where(User.email == data.email)
+        .options(selectinload(User.roles))
+    )
     user = result.scalar_one_or_none()
 
     if not user:
