@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.params import Depends
 from sqlalchemy.orm import selectinload
-
 from app.schemas import UserUpdate
 from app.dependencies import SessionDep
 from app.models import User
@@ -55,3 +54,22 @@ async def delete_profile(session: SessionDep, credentials: HTTPAuthorizationCred
     await session.commit()
 
     return {"message": "Account deleted successfully"}
+
+
+async def get_current_admin(session: SessionDep, credentials: HTTPAuthorizationCredentials = Depends(security)) -> User:
+    try:
+        payload = jwt.decode(credentials.credentials, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        email = payload.get('email')
+        role = payload.get('role')
+    except jwt.PyJWTError:
+        raise HTTPException(401, "Invalid token")
+
+    if role != 'admin':
+        raise HTTPException(403, "Admin rights required")
+
+    result = await session.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
+    if not user or not user.is_active:
+        raise HTTPException(401, "User not found or inactive")
+
+    return user

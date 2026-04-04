@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import auth, users, admin, mock
+from app.routers import auth, users, admin, products
 from app.database import init_db
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware

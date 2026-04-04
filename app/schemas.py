@@ -23,3 +23,12 @@ class UserUpdate(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8)
+
+class RoleCreate(BaseModel):
+    name: str
+
+class PermissionCreate(BaseModel):
+    name: str
+
+class RolePermissionsUpdate(BaseModel):
+    permission_ids: list[int]

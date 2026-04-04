@@ -64,4 +64,5 @@ async def login(data: UserLogin, session: SessionDep):
 
 @router.post('/logout')
 async def logout():
-    return {"message": "Logged out successfully"} #Удаление access token происходит на фронтенде
+    return {"message": "Logged out successfully"}  # Удаление access token происходит на фронтенде
+
