@@ -8,13 +8,13 @@ from sqlalchemy import select
 router = APIRouter()
 
 
-@router.get('/')
+@router.get('')
 async def get_products(session: SessionDep, current_user: User = Depends(require_permission('products:read'))):
     result = await session.execute(select(Product))
     return result.scalars().all()
 
 
-@router.post('/')
+@router.post('')
 async def create_product(data: ProductCreate, session: SessionDep,
                          current_user: User = Depends(require_permission('products:write'))):
     new_product = Product(name=data.name, price=data.price, in_stock=data.in_stock)
