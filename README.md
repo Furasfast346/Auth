@@ -31,7 +31,10 @@ pip install -r requirements.txt
 
 # Запустить сервер
 uvicorn app.main:app --reload
+```
 
 ### Запуск через Докер
+```
 docker build -t auth-system .
 docker run -p 8000:8000 auth-system
+```
