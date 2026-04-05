@@ -9,8 +9,8 @@ class UserBase(BaseModel):
 
 
 class UserRegister(UserBase):
-    password: str = Field(min_length=8)
-    password_confirmation: str = Field(min_length=8)
+    password: str = Field(min_length=6)
+    password_confirmation: str = Field(min_length=6)
 
 
 class UserUpdate(BaseModel):
@@ -22,7 +22,7 @@ class UserUpdate(BaseModel):
 
 class UserLogin(BaseModel):
     email: EmailStr
-    password: str = Field(min_length=8)
+    password: str = Field(min_length=6)
 
 class RoleCreate(BaseModel):
     name: str
@@ -32,3 +32,19 @@ class PermissionCreate(BaseModel):
 
 class RolePermissionsUpdate(BaseModel):
     permission_ids: list[int]
+
+class ProductCreate(BaseModel):
+    name: str
+    price: int
+    in_stock: bool = True
+
+class ProductUpdate(BaseModel):
+    name: str
+    price: int
+    in_stock: bool
+
+class ProductResponse(ProductCreate):
+    id: int
+
+class RoleAssign(BaseModel):
+    role_id: int

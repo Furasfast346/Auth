@@ -63,3 +63,12 @@ class RolePermission(Base):
 
     role_id: Mapped[int] = mapped_column(ForeignKey('roles.id'), primary_key=True)
     permission_id: Mapped[int] = mapped_column(ForeignKey('permissions.id'), primary_key=True)
+
+
+class Product(Base):
+    __tablename__ = "products"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    price: Mapped[int]
+    in_stock: Mapped[bool] = mapped_column(default=True)

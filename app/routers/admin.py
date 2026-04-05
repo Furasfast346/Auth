@@ -2,18 +2,33 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select, delete
 from app.dependencies import SessionDep
 from app.models import User, Role, UserRole, Permission, RolePermission
-from app.routers.users import get_current_admin
-from app.schemas import RoleCreate, PermissionCreate, RolePermissionsUpdate
+from app.dependencies import get_current_admin
+from app.schemas import RoleCreate, PermissionCreate, RolePermissionsUpdate, RoleAssign
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+from sqlalchemy.orm import selectinload
 
 
 @router.get("/users")
 async def get_all_users(session: SessionDep, admin: User = Depends(get_current_admin)):
-    result = await session.execute(select(User))
+    result = await session.execute(select(User).options(selectinload(User.roles)))
     users = result.scalars().all()
-    return users
 
+    users_data = []
+    for user in users:
+        role = user.roles[0] if user.roles else None
+        users_data.append({
+            "id": user.id,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "patronymic": user.patronymic,
+            "is_active": user.is_active,
+            "role_id": role.id if role else 3,
+            "role_name": role.name if role else "user"
+        })
+    return users_data
 
 @router.get("/users/{user_id}")
 async def get_user_by_id(user_id: int, session: SessionDep, admin: User = Depends(get_current_admin)):
@@ -44,15 +59,17 @@ async def activate_user(user_id: int, session: SessionDep, admin: User = Depends
 
 
 @router.put("/users/{user_id}/role")
-async def set_user_role(user_id: int, role_id: int, session: SessionDep, admin: User = Depends(get_current_admin)):
+async def set_user_role(user_id: int, data: RoleAssign, session: SessionDep, admin: User = Depends(get_current_admin)):
     user = await session.get(User, user_id)
     if not user:
         raise HTTPException(404, "User not found")
-    role = await session.get(Role, role_id)
+
+    role = await session.get(Role, data.role_id)
     if not role:
         raise HTTPException(404, "Role not found")
+
     await session.execute(delete(UserRole).where(UserRole.user_id == user_id))
-    session.add(UserRole(user_id=user_id, role_id=role_id))
+    session.add(UserRole(user_id=user_id, role_id=data.role_id))
     await session.commit()
     return {"message": f"User {user_id} now has role {role.name}"}
 

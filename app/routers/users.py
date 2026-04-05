@@ -1,75 +1,46 @@
-from fastapi import APIRouter, HTTPException
-from fastapi.params import Depends
+from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from app.schemas import UserUpdate
-from app.dependencies import SessionDep
+from app.dependencies import SessionDep, get_current_user
 from app.models import User
-from passlib.context import CryptContext
-from app.config import settings
-import jwt
-from sqlalchemy import select
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 router = APIRouter()
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-security = HTTPBearer()
+
 
 @router.get('/me')
-async def get_profile(session: SessionDep, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    user_data = jwt.decode(credentials.credentials, settings.SECRET_KEY, settings.ALGORITHM)
-    result = await session.execute(
-        select(User)
-        .where(User.email == user_data['email'])
-        .options(selectinload(User.roles))
-    )
+async def get_profile(session: SessionDep, current_user: User = Depends(get_current_user)):
+    result = await session.execute(select(User).where(User.id == current_user.id).options(selectinload(User.roles)))
     user = result.scalar_one_or_none()
-    return user
+
+    if not user:
+        raise HTTPException(404, "User not found")
+
+    role_name = user.roles[0].name if user.roles else "user"
+
+    return {"id": user.id, "email": user.email, "first_name": user.first_name, "last_name": user.last_name,
+            "patronymic": user.patronymic, "is_active": user.is_active, "role": role_name}
+
 
 @router.put('/me')
-async def update_profile(data: UserUpdate, session: SessionDep, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    user_data = jwt.decode(credentials.credentials, settings.SECRET_KEY, settings.ALGORITHM)
-    result = await session.execute(select(User).where(User.email == user_data['email']))
-    user = result.scalar_one_or_none()
+async def update_profile(data: UserUpdate, session: SessionDep, current_user: User = Depends(get_current_user)):
+    if data.first_name is not None:
+        current_user.first_name = data.first_name
+    if data.last_name is not None:
+        current_user.last_name = data.last_name
+    if data.patronymic is not None:
+        current_user.patronymic = data.patronymic
+    if data.email is not None:
+        current_user.email = data.email
+    await session.commit()
+    await session.refresh(current_user)
 
-    if user:
-        user.first_name = data.first_name
-        user.last_name = data.last_name
-        user.patronymic = data.patronymic
-        user.email = data.email
-        await session.commit()
-    await session.refresh(user)
+    return {"first_name": current_user.first_name, "last_name": current_user.last_name,
+            "patronymic": current_user.patronymic, "email": current_user.email}
 
-    return {"first_name": user.first_name, "last_name": user.last_name, "patronymic": user.patronymic,
-            "email": user.email}
 
 @router.delete('/me')
-async def delete_profile(session: SessionDep, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    user_data = jwt.decode(credentials.credentials, settings.SECRET_KEY, settings.ALGORITHM)
-    result = await session.execute(select(User).where(User.email == user_data['email']))
-    user = result.scalar_one_or_none()
-    if not user:
-        raise HTTPException(status_code=404, detail='User not found')
-
-    user.is_active = False
+async def delete_profile(session: SessionDep, current_user: User = Depends(get_current_user)):
+    current_user.is_active = False
     await session.commit()
-
     return {"message": "Account deleted successfully"}
-
-
-async def get_current_admin(session: SessionDep, credentials: HTTPAuthorizationCredentials = Depends(security)) -> User:
-    try:
-        payload = jwt.decode(credentials.credentials, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        email = payload.get('email')
-        role = payload.get('role')
-    except jwt.PyJWTError:
-        raise HTTPException(401, "Invalid token")
-
-    if role != 'admin':
-        raise HTTPException(403, "Admin rights required")
-
-    result = await session.execute(select(User).where(User.email == email))
-    user = result.scalar_one_or_none()
-    if not user or not user.is_active:
-        raise HTTPException(401, "User not found or inactive")
-
-    return user
