@@ -1,6 +1,6 @@
 # Auth System — система аутентификации и авторизации
 
-Современный бэкенд на **FastAPI** с JWT-аутентификацией, ролевой моделью доступа (RBAC), админ-панелью и полным CRUD для пользователей, товаров и ролей.
+Бэкенд на **FastAPI** с JWT-аутентификацией, ролевой моделью доступа (RBAC), админ-панелью и полным CRUD для пользователей, товаров и ролей.
 
 ## Стек технологий
 
@@ -30,7 +30,7 @@ source venv/bin/activate  # или venv\Scripts\activate на Windows
 pip install -r requirements.txt
 
 # Запустить сервер
-uvicorn app.main:app --reload
+python -m app.main
 ```
 
 ### Запуск через Докер
