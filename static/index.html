@@ -18,20 +18,24 @@
         .btn-danger { background: #dc3545; color: white; }
         .btn-danger:hover { background: #bb2d3b; }
         .btn-secondary { background: #6c757d; color: white; }
+        .btn-sm { padding: 4px 8px; font-size: 12px; }
 
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; margin-bottom: 20px; }
         .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         .card h2 { margin-bottom: 15px; font-size: 18px; color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .card h3 { margin-bottom: 10px; font-size: 16px; color: #555; margin-top: 15px; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: 500; font-size: 14px; }
         input, textarea, select { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
-        .product-item, .user-item { border: 1px solid #eee; padding: 10px; margin-bottom: 10px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-        .product-info h4 { margin-bottom: 5px; }
+        .product-item, .user-item, .role-item, .permission-item { border: 1px solid #eee; padding: 10px; margin-bottom: 10px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .error { color: #dc3545; font-size: 13px; margin-top: 5px; }
         .success { color: #28a745; font-size: 13px; margin-top: 5px; }
         .admin-panel { display: none; margin-top: 20px; }
-        .users-list { max-height: 400px; overflow-y: auto; }
+        .users-list, .roles-list, .permissions-list { max-height: 400px; overflow-y: auto; margin-top: 15px; }
         .role-select { width: auto; min-width: 100px; margin-left: 10px; }
+        .flex-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .badge { background: #e9ecef; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin: 2px; display: inline-block; }
+        .permission-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -48,6 +52,7 @@
         </div>
     </div>
 
+    <!-- Формы входа/регистрации -->
     <div id="loginForm" class="card" style="max-width: 400px; margin: 0 auto;">
         <h2>Вход</h2>
         <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="admin@example.com"></div>
@@ -68,6 +73,7 @@
         <div id="regError" class="error"></div>
     </div>
 
+    <!-- Основная панель после входа -->
     <div id="profilePanel" style="display: none;">
         <div class="grid">
             <div class="card">
@@ -98,17 +104,45 @@
             </div>
         </div>
 
+        <!-- Админ-панель -->
         <div id="adminPanel" class="admin-panel">
             <div class="card">
                 <h2>👑 Админ-панель</h2>
+
+                <h3>👥 Пользователи</h3>
                 <div id="usersList">Загрузка пользователей...</div>
+
+                <h3>🎭 Управление ролями</h3>
+                <div id="rolesList">Загрузка ролей...</div>
+                <div class="flex-row" style="margin-top: 10px;">
+                    <input type="text" id="newRoleName" placeholder="Название новой роли" style="flex: 1;">
+                    <button id="createRoleBtn" class="btn btn-primary">Создать роль</button>
+                </div>
+
+                <h3>🔑 Управление разрешениями</h3>
+                <div id="permissionsList">Загрузка разрешений...</div>
+                <div class="flex-row" style="margin-top: 10px;">
+                    <input type="text" id="newPermissionName" placeholder="Название разрешения (например, users:read)" style="flex: 1;">
+                    <button id="createPermissionBtn" class="btn btn-primary">Создать разрешение</button>
+                </div>
+
+                <h3>🔗 Назначить разрешения роли</h3>
+                <div class="flex-row">
+                    <select id="assignRoleSelect" style="flex: 1;">
+                        <option value="">Выберите роль</option>
+                    </select>
+                    <select id="assignPermissionSelect" style="flex: 1;">
+                        <option value="">Выберите разрешение</option>
+                    </select>
+                    <button id="assignPermissionBtn" class="btn btn-primary">Назначить</button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    const API_BASE = 'http://localhost:8000';
+    const API_BASE = '';
     let token = localStorage.getItem('access_token');
     let currentUser = null;
     let editProductId = null;
@@ -221,7 +255,7 @@
 
     // Продукты
     async function loadProducts() {
-        const res = await request('/products');
+        const res = await request('/products/');
         if (res.ok) {
             const products = await res.json();
             const container = document.getElementById('productsList');
@@ -247,7 +281,7 @@
             price: parseInt(document.getElementById('productPrice').value),
             in_stock: document.getElementById('productStock').value === 'true'
         };
-        const res = await request('/products', { method: 'POST', body: JSON.stringify(data) });
+        const res = await request('/products/', { method: 'POST', body: JSON.stringify(data) });
         if (res.ok) {
             loadProducts();
             showMessage('productMessage', 'Товар создан');
@@ -297,7 +331,7 @@
         document.getElementById('createProductBtn').onclick = () => updateProduct(id);
     };
 
-    // Админка
+    // Админка: пользователи
     async function loadAdminPanel() {
         const usersRes = await request('/admin/users');
         if (!usersRes.ok) return;
@@ -317,6 +351,10 @@
                 </div>
             </div>
         `).join('');
+
+        loadRoles();
+        loadPermissions();
+        loadRoleSelect();
         document.getElementById('adminPanel').style.display = 'block';
     }
 
@@ -341,6 +379,194 @@
         if (res.ok) loadAdminPanel();
     };
 
+    // Админка: роли с их разрешениями
+    async function loadRoles() {
+        const res = await request('/admin/roles');
+        if (!res.ok) return;
+        const roles = await res.json();
+
+        // Для каждой роли загружаем её разрешения
+        const rolesWithPermissions = await Promise.all(roles.map(async (role) => {
+            const permRes = await request(`/admin/roles/${role.id}/permissions`);
+            let permissions = [];
+            if (permRes.ok) {
+                permissions = await permRes.json();
+            }
+            return { ...role, permissions };
+        }));
+
+        const container = document.getElementById('rolesList');
+        container.innerHTML = rolesWithPermissions.map(r => `
+            <div class="role-item">
+                <div>
+                    <strong>${r.name}</strong> (id: ${r.id})
+                    <div class="permission-list">
+                        ${r.permissions.map(p => `<span class="badge">${p.name}</span>`).join('') || '<span class="badge" style="background:#f8d7da;">нет разрешений</span>'}
+                    </div>
+                </div>
+                <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                    <input type="text" id="edit-role-${r.id}" value="${r.name}" placeholder="Новое имя" style="width: 120px;">
+                    <select id="add-perm-${r.id}" class="permission-select" style="width: 150px;">
+                        <option value="">Добавить разрешение</option>
+                    </select>
+                    <button onclick="addPermissionToRole(${r.id})" class="btn-sm btn-primary">+</button>
+                    <button onclick="updateRole(${r.id})" class="btn-sm btn-primary">Сохранить</button>
+                    <button onclick="deleteRole(${r.id})" class="btn-sm btn-danger">Удалить</button>
+                </div>
+            </div>
+        `).join('');
+
+        // Заполняем select для добавления разрешений
+        const permsRes = await request('/admin/permissions');
+        if (permsRes.ok) {
+            const allPermissions = await permsRes.json();
+            roles.forEach(role => {
+                const select = document.getElementById(`add-perm-${role.id}`);
+                if (select) {
+                    select.innerHTML = '<option value="">Добавить разрешение</option>' +
+                        allPermissions.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+                }
+            });
+        }
+    }
+
+    window.addPermissionToRole = async (roleId) => {
+        const select = document.getElementById(`add-perm-${roleId}`);
+        const permissionId = select.value;
+        if (!permissionId) return;
+
+        const res = await request(`/admin/roles/${roleId}/permissions`, {
+            method: 'PUT',
+            body: JSON.stringify({ permission_ids: [parseInt(permissionId)] })
+        });
+        if (res.ok) {
+            loadRoles();
+            showMessage('profileMessage', 'Разрешение добавлено', false);
+        } else {
+            showMessage('profileMessage', 'Ошибка', true);
+        }
+    };
+
+    window.updateRole = async (roleId) => {
+        const newName = document.getElementById(`edit-role-${roleId}`).value.trim();
+        if (!newName) return;
+        const res = await request(`/admin/roles/${roleId}`, { method: 'PUT', body: JSON.stringify({ name: newName }) });
+        if (res.ok) {
+            loadRoles();
+            loadAdminPanel();
+            showMessage('profileMessage', 'Роль обновлена', false);
+        } else {
+            showMessage('profileMessage', 'Ошибка обновления роли', true);
+        }
+    };
+
+    window.deleteRole = async (roleId) => {
+        if (!confirm('Удалить роль? Это может затронуть пользователей.')) return;
+        const res = await request(`/admin/roles/${roleId}`, { method: 'DELETE' });
+        if (res.ok) {
+            loadRoles();
+            loadAdminPanel();
+            showMessage('profileMessage', 'Роль удалена', false);
+        } else {
+            const err = await res.json();
+            showMessage('profileMessage', err.detail || 'Ошибка удаления', true);
+        }
+    };
+
+    async function createRole() {
+        const name = document.getElementById('newRoleName').value.trim();
+        if (!name) return;
+        const res = await request('/admin/roles', { method: 'POST', body: JSON.stringify({ name }) });
+        if (res.ok) {
+            document.getElementById('newRoleName').value = '';
+            loadRoles();
+            loadAdminPanel();
+            showMessage('profileMessage', 'Роль создана', false);
+        } else {
+            showMessage('profileMessage', 'Ошибка создания роли', true);
+        }
+    }
+
+    // Админка: разрешения
+    async function loadPermissions() {
+        const res = await request('/admin/permissions');
+        if (!res.ok) return;
+        const permissions = await res.json();
+        const container = document.getElementById('permissionsList');
+        container.innerHTML = permissions.map(p => `
+            <div class="permission-item">
+                <div><strong>${p.name}</strong> (id: ${p.id})</div>
+                <div>
+                    <button onclick="deletePermission(${p.id})">Удалить</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    window.deletePermission = async (permId) => {
+        if (!confirm('Удалить разрешение?')) return;
+        const res = await request(`/admin/permissions/${permId}`, { method: 'DELETE' });
+        if (res.ok) {
+            loadPermissions();
+            loadRoles();
+            showMessage('profileMessage', 'Разрешение удалено', false);
+        } else {
+            const err = await res.json();
+            showMessage('profileMessage', err.detail || 'Ошибка удаления', true);
+        }
+    };
+
+    async function createPermission() {
+        const name = document.getElementById('newPermissionName').value.trim();
+        if (!name) return;
+        const res = await request('/admin/permissions', { method: 'POST', body: JSON.stringify({ name }) });
+        if (res.ok) {
+            document.getElementById('newPermissionName').value = '';
+            loadPermissions();
+            loadRoles();
+            showMessage('profileMessage', 'Разрешение создано', false);
+        } else {
+            showMessage('profileMessage', 'Ошибка создания разрешения', true);
+        }
+    }
+
+    // Заполнение select для назначения разрешений (старый способ, оставим для совместимости)
+    async function loadRoleSelect() {
+        const res = await request('/admin/roles');
+        if (!res.ok) return;
+        const roles = await res.json();
+        const select = document.getElementById('assignRoleSelect');
+        select.innerHTML = '<option value="">Выберите роль</option>' +
+            roles.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+
+        const permRes = await request('/admin/permissions');
+        if (permRes.ok) {
+            const perms = await permRes.json();
+            const permSelect = document.getElementById('assignPermissionSelect');
+            permSelect.innerHTML = '<option value="">Выберите разрешение</option>' +
+                perms.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+        }
+    }
+
+    async function assignPermission() {
+        const roleId = document.getElementById('assignRoleSelect').value;
+        const permissionId = document.getElementById('assignPermissionSelect').value;
+        if (!roleId || !permissionId) {
+            showMessage('profileMessage', 'Выберите роль и разрешение', true);
+            return;
+        }
+        const res = await request(`/admin/roles/${roleId}/permissions`, {
+            method: 'PUT',
+            body: JSON.stringify({ permission_ids: [parseInt(permissionId)] })
+        });
+        if (res.ok) {
+            loadRoles();
+            showMessage('profileMessage', 'Разрешение назначено роли', false);
+        } else {
+            showMessage('profileMessage', 'Ошибка назначения', true);
+        }
+    }
+
     // Инициализация
     document.getElementById('showLoginBtn').onclick = () => { document.getElementById('loginForm').style.display = 'block'; document.getElementById('registerForm').style.display = 'none'; };
     document.getElementById('showRegisterBtn').onclick = () => { document.getElementById('registerForm').style.display = 'block'; document.getElementById('loginForm').style.display = 'none'; };
@@ -350,6 +576,9 @@
     document.getElementById('updateProfileBtn').onclick = updateProfile;
     document.getElementById('deleteProfileBtn').onclick = deleteAccount;
     document.getElementById('createProductBtn').onclick = createProduct;
+    document.getElementById('createRoleBtn').onclick = createRole;
+    document.getElementById('createPermissionBtn').onclick = createPermission;
+    document.getElementById('assignPermissionBtn').onclick = assignPermission;
 
     if (token) { loadCurrentUser().then(() => { if (currentUser) showUIAfterLogin(); else logout(); }); }
     else logout();
